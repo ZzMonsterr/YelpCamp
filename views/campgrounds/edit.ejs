@@ -3,21 +3,24 @@
         <h1 class="text-center">Edit Campground</h1>
         <div class="col-6 offset-3">
             <!-- Diff from new.ejs. override with PUT here -->
-            <form action="/campgrounds/<%=campground._id%>?_method=PUT" method="POST">
+            <form action="/campgrounds/<%=campground._id%>?_method=PUT" method="POST" novalidate class="validated-form">
                 <div class="mb-3">
                     <label class="form-label" for="title">Title</label>
                     <!-- [title]: a group content
                     when our data is sent via POST request to our Express app and the server
                     everything in the req.body stored under 'campground'-->
-                    <input class="form-control" type="text" id="title" name="campground[title]" value="<%= campground.title %>">
+                    <input class="form-control" type="text" id="title" name="campground[title]" value="<%= campground.title %>" required>
+                    <div class="valid-feedback">
+                        Looks good!
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="location">Location</label>
-                    <input class="form-control" type="text" id="location" name="campground[location]" value="<%= campground.location %>">
+                    <input class="form-control" type="text" id="location" name="campground[location]" value="<%= campground.location %>" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="image">Image URL</label>
-                    <input class="form-control" type="text" id="image" name="campground[image]" value="<%= campground.image %>">
+                    <input class="form-control" type="text" id="image" name="campground[image]" value="<%= campground.image %>" required>
                 </div>
                 
                 <div class="mb-3">
@@ -25,14 +28,14 @@
                     <div class="input-group">
                         <span class="input-group-text" id="price-label">$</span>
                         <input type="text" class="form-control" id="price" placeholder="0.00" aria-label="price"
-                            aria-describedby="price-label" name="campground[price]" value="<%=campground.price %>">
+                            aria-describedby="price-label" name="campground[price]" value="<%=campground.price %>" required>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" for="description">Description</label>
                     <!-- we do not use `value` attribute in the textarea -->
-                    <textarea class="form-control" type="text" id="description" name="campground[description]"> <%= campground.description %></textarea>
+                    <textarea class="form-control" type="text" id="description" name="campground[description]" required> <%= campground.description %></textarea>
                 </div>
                 <div class="mb-3">
                     <button type="submit" class="btn btn-success">Save Your Change</button>
