@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 // const Joi = require('joi');
-const {campgroundSchema} = require('./schemas');
+const {campgroundSchema, reviewSchema} = require('./schemas.js');
 mongoose.set('useFindAndModify', false);
 // A new EJS tool for layouts: ejs-mate: https://github.com/JacksonTian/ejs-mate
 const ejsMate = require('ejs-mate');
@@ -10,6 +10,7 @@ const catchAsync = require('./utils/catchAsync');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 const Campground = require('./models/campground');
+const Review = require('./models/review');
 const { nextTick } = require('process');
 
 mongoose.connect('mongodb://localhost:27017/yelp-camp', {
@@ -45,9 +46,17 @@ const validateCampground = (req, res, next) => {
     } else {
         next();
     }
-
 }
 
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+}
 
 // home page
 app.get('/', (req, res) => {
@@ -78,7 +87,9 @@ app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) =
 
 // show a specific campground
 app.get('/campgrounds/:id', catchAsync(async (req, res,) => {
-    const campground = await Campground.findById(req.params.id)
+    // bug1: .populate() should be just after .findById
+    const campground = await (await Campground.findById(req.params.id).populate('reviews'))
+    console.log(campground);
     res.render('campgrounds/show', { campground });
 }));
 
@@ -103,6 +114,29 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
 }));
+
+// create a review of one campground
+// Target: POST /campgrounds/:id/reviews
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res) => {
+    // res.send('YOU MADE IT!!!');  // test success
+    const campground = await Campground.findById(req.params.id);
+    const review = new Review(req.body.review);
+    campground.reviews.push(review);
+    await review.save();
+    await campground.save();
+    res.redirect(`/campgrounds/${campground._id}`);
+}))
+
+// delete a review of one campground
+app.delete('/campgrounds/:campId/reviews/:reviewId', catchAsync(async (req, res) => {
+    // find that campground, delete that specific review
+    // use '$pull' operator in Mongo which removes/pulls out from an existing array all
+    // instances of value(s) that match a specific condition
+    const {campId, reviewId} = req.params;
+    await Campground.findByIdAndUpdate(campId, {$pull : {reviews: reviewId}});
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/campgrounds/${campId}`);
+}))
 
 // '*': catch error in all links
 // IMPORTANT: this will only run if none of these previous lines matches
