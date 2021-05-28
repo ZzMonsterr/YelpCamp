@@ -8,6 +8,9 @@ const passport = require('passport');
 router.get('/register', (req, res) => {
     // we've use viewengine and blabla in the app.js so that we can
     // avoid typing the whole path
+    if (req.isAuthenticated()) {
+        return res.redirect('/campgrounds');
+    }
     res.render('users/register');
 });
 router.post('/register', catchAsync(async(req, res) => {
@@ -30,6 +33,9 @@ router.post('/register', catchAsync(async(req, res) => {
 
 // log in, where authentication happens
 router.get('/login', (req, res) => {
+    if (req.isAuthenticated()) {
+        return res.redirect('/campgrounds');
+    }
     res.render('users/login');
 });
 router.post('/login', passport.authenticate('local', 
@@ -38,7 +44,7 @@ router.post('/login', passport.authenticate('local',
     // failureFlash:= show flash of "Password or username is incorrect" if login failed
     req.flash('success', 'welcome back!');
     const redirectUrl = req.session.returnTo || '/campgrounds';
-    delete req.session.returnTo;
+    // delete req.session.returnTo;
     res.redirect(redirectUrl);
 });
 

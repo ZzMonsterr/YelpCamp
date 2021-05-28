@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Review = require('./review');
+const User = require('./user')
 const Schema = mongoose.Schema;
 
 const CampgroundSchema = new Schema({
@@ -8,7 +9,11 @@ const CampgroundSchema = new Schema({
     price: Number,
     description: String,
     location: String,
-    // one to many relationship
+    // author: {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'User'
+    // },
+    // [] := one to many relationship
     // stores a list of ObjectIds, and ref to a 'Review' model
     reviews: [
         {

@@ -68,17 +68,28 @@ passport.deserializeUser(User.deserializeUser());  // deserializeUser: unstore a
 // we'll have access to it in our locals under the key success.
 // In /views/layouts/boilerplate.ejs, we use <%= success %> 
 // to display flash message.
+// also, check whether any user logged in.
 app.use((req, res, next) => {
+    // req.originalUrl: store the whole url user is visiting, and then
+    // use it after a user has logged in (to get better user experience)
+    if (!['/login', '/register', '/'].includes(req.originalUrl)) {
+        console.log(req.originalUrl);
+        req.session.returnTo = req.originalUrl;
+    } else {
+        req.session.returnTo = '/campgrounds';
+    }
+    // otherwise, the user does come from login('/login') or homepage('/'),
+    // redirect to localhost:3000/campgrounds as default per /routes/users.js
     res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 })
 
-
+app.use('/', userRoutes);
 app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/reviews', reviewRoutes);
-app.use('/', userRoutes);
+
 
 // home page
 app.get('/', (req, res) => {
