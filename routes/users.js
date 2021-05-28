@@ -41,9 +41,9 @@ router.get('/login', (req, res) => {
 router.post('/login', passport.authenticate('local', 
             {failureFlash: true, failureRedirect: '/login'}),
             (req, res) => {
-    // failureFlash:= show flash of "Password or username is incorrect" if login failed
     req.flash('success', 'welcome back!');
     const redirectUrl = req.session.returnTo || '/campgrounds';
+    console.log("in routes/users.js, redirectUrl:", redirectUrl);
     // delete req.session.returnTo;
     res.redirect(redirectUrl);
 });

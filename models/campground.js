@@ -9,10 +9,10 @@ const CampgroundSchema = new Schema({
     price: Number,
     description: String,
     location: String,
-    // author: {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'User'
-    // },
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     // [] := one to many relationship
     // stores a list of ObjectIds, and ref to a 'Review' model
     reviews: [

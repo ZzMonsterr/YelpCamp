@@ -29,10 +29,11 @@ router.get('/', catchAsync(async (req, res) => {
 router.get('/new', isLoggedIn, (req, res) => {
     res.render('campgrounds/new');
 })
-router.post('/', validateCampground, catchAsync(async (req, res, next) => {
+router.post('/', isLoggedIn, validateCampground, catchAsync(async (req, res, next) => {
     // validation is realized in the middleware 'validateCampground'
     // create new model
     const campground = new Campground(req.body.campground);
+    campground.author = req.user._id;
     // save it
     await campground.save();
     req.flash('success', 'Successfully made a new campground!');
@@ -41,9 +42,9 @@ router.post('/', validateCampground, catchAsync(async (req, res, next) => {
 }));
 
 // show a campground
-router.get('/:id', isLoggedIn, catchAsync(async (req, res,) => {
+router.get('/:id', catchAsync(async (req, res,) => {
     // bug1: .populate() should be just after .findById
-    const campground = await Campground.findById(req.params.id).populate('reviews');
+    const campground = await Campground.findById(req.params.id).populate('reviews').populate('author');
     if (!campground) {
         req.flash('error', 'Can not find that campground');
         return res.redirect('/campgrounds');

@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require('joi');  // JS validation tool: Joi
 
 // Joi: avoid bugs via using Postman POST to submit
 // a campground without review / review rating
