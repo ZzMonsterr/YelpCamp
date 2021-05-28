@@ -5,6 +5,7 @@ const { campgroundSchema } = require('../schemas.js');
 
 const Campground = require('../models/campground');
 const ExpressError = require('../utils/ExpressError');
+const { isLoggedIn } = require('../middleware');
 
 // validate
 const validateCampground = (req, res, next) => {
@@ -25,7 +26,7 @@ router.get('/', catchAsync(async (req, res) => {
 
 // create a new campgrounds
 // /new must be before /:id, otherwise it'll be treated as id!
-router.get('/new', (req, res) => {
+router.get('/new', isLoggedIn, (req, res) => {
     res.render('campgrounds/new');
 })
 router.post('/', validateCampground, catchAsync(async (req, res, next) => {
@@ -40,7 +41,7 @@ router.post('/', validateCampground, catchAsync(async (req, res, next) => {
 }));
 
 // show a campground
-router.get('/:id', catchAsync(async (req, res,) => {
+router.get('/:id', isLoggedIn, catchAsync(async (req, res,) => {
     // bug1: .populate() should be just after .findById
     const campground = await Campground.findById(req.params.id).populate('reviews');
     if (!campground) {
@@ -52,7 +53,7 @@ router.get('/:id', catchAsync(async (req, res,) => {
 }));
 
 // edit a campground
-router.get('/:id/edit', catchAsync(async (req, res) => {
+router.get('/:id/edit', isLoggedIn, catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id)
     res.render('campgrounds/edit', { campground });
 }));
@@ -67,7 +68,7 @@ router.put('/:id', validateCampground, catchAsync(async (req, res) => {
 }));
 
 // delete a campground
-router.delete('/:id', catchAsync(async (req, res) => {
+router.delete('/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     req.flash('success', 'Successfully deleted a campground!');

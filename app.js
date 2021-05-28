@@ -4,14 +4,16 @@ const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');  // A new EJS tool for layouts: ejs-mate: https://github.com/JacksonTian/ejs-mate
 const session = require('express-session');
 const flash = require('connect-flash');
-// const Joi = require('joi');  // JS Validation Tool: [joi.dev](https://joi.dev/api/?v=17.4.0)
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
 
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
-// const { nextTick } = require('process');
 
-const campgrounds = require('./routes/campgrounds');
-const reviews = require('./routes/reviews');
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -41,8 +43,7 @@ app.use(methodOverride('_method'));
 // use path.join here so that we can reach /public regardless of curr path
 app.use(express.static(path.join(__dirname, 'public')))
 
-// in order to use express-session
-const sessionConfig = {
+const sessionConfig = {             // in order to use express-session
     secret: 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
@@ -53,9 +54,14 @@ const sessionConfig = {
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }
-app.use(session(sessionConfig))
-// in order to use connect-flash
+app.use(session(sessionConfig))     // in order to use connect-flash
 app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());        // per http://www.passportjs.org/docs/downloads/html/: If your application uses persistent login sessions, passport.session() middleware must also be used.
+passport.use(new LocalStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());   // serializeUser: how do we store a user in session
+passport.deserializeUser(User.deserializeUser());  // deserializeUser: unstore a user
 
 // a middleware on EVERY single request, put before any routers,
 // if any flash message of which type is 'success' is passed,
@@ -63,13 +69,16 @@ app.use(flash());
 // In /views/layouts/boilerplate.ejs, we use <%= success %> 
 // to display flash message.
 app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 })
 
-app.use('/campgrounds', campgrounds);
-app.use('/campgrounds/:id/reviews', reviews);
+
+app.use('/campgrounds', campgroundRoutes);
+app.use('/campgrounds/:id/reviews', reviewRoutes);
+app.use('/', userRoutes);
 
 // home page
 app.get('/', (req, res) => {
