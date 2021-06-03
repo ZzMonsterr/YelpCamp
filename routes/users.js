@@ -1,58 +1,33 @@
 const express = require('express');
 const router = express.Router();
+const users = require('../controllers/users');
 const catchAsync = require('../utils/catchAsync');
-const User = require('../models/user');
 const passport = require('passport');
 
+// ============================================================
+// Fancier routers (use Express router.route())
+// ============================================================
+router.route('/register')
+    .get(users.renderRegister)
+    .post(catchAsync(users.register));
+
+router.route('/login')
+    .get(users.renderLogin)
+    .post(passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), users.login);
+
+// ============================================================
+// Original routers
+// ============================================================
+
 // register a new user, and then log in automatically
-router.get('/register', (req, res) => {
-    // we've use viewengine and blabla in the app.js so that we can
-    // avoid typing the whole path
-    if (req.isAuthenticated()) {
-        return res.redirect('/campgrounds');
-    }
-    res.render('users/register');
-});
-router.post('/register', catchAsync(async(req, res) => {
-    try {
-        const {email, username, password} = req.body;
-        const user = new User({email, username});
-        const registeredUser = await User.register(user, password);
-        // ref http://www.passportjs.org/docs/login/
-        // Note: passport.authenticate() middleware invokes req.login() automatically. 
-        req.login(registeredUser, function(err) {
-            if (err) { return next(err); }
-            req.flash('success', 'Welcome to Yelp Camp!');
-            res.redirect('/campgrounds');
-        });
-    } catch(e) {
-        req.flash('error', e.message);
-        res.redirect('register');
-    }
-}));
+// router.get('/register', users.renderRegister);
+// router.post('/register', catchAsync(users.register));
 
 // log in, where authentication happens
-router.get('/login', (req, res) => {
-    if (req.isAuthenticated()) {
-        return res.redirect('/campgrounds');
-    }
-    res.render('users/login');
-});
-router.post('/login', passport.authenticate('local', 
-            {failureFlash: true, failureRedirect: '/login'}),
-            (req, res) => {
-    req.flash('success', 'welcome back!');
-    const redirectUrl = req.session.returnTo || '/campgrounds';
-    console.log("in routes/users.js, redirectUrl:", redirectUrl);
-    // delete req.session.returnTo;
-    res.redirect(redirectUrl);
-});
+// router.get('/login', users.renderLogin);
+// router.post('/login', passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), users.login);
 
 // log out
-router.get('/logout', (req, res) => {
-    req.logout();   // thanks to passport
-    req.flash('success', 'Goodbye!');
-    res.redirect('/campgrounds');
-})
+router.get('/logout', users.logout);
 
 module.exports = router;
