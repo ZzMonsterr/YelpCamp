@@ -5,18 +5,7 @@ const { campgroundSchema } = require('../schemas.js');
 
 const Campground = require('../models/campground');
 const ExpressError = require('../utils/ExpressError');
-const { isLoggedIn } = require('../middleware');
-
-// validate
-const validateCampground = (req, res, next) => {
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map(el => el.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-}
+const { isLoggedIn, validateCampground, isAuthor } = require('../middleware');
 
 // show all campgrounds
 router.get('/', catchAsync(async (req, res) => {
@@ -44,7 +33,14 @@ router.post('/', isLoggedIn, validateCampground, catchAsync(async (req, res, nex
 // show a campground
 router.get('/:id', catchAsync(async (req, res,) => {
     // bug1: .populate() should be just after .findById
-    const campground = await Campground.findById(req.params.id).populate('reviews').populate('author');
+    // populate each review, and then populate the review's author;
+    const campground = await Campground.findById(req.params.id).populate({
+        path: 'reviews',
+        populate: {
+            path: 'author'
+        }
+    }).populate('author');  // and then populate the campground's author
+    console.log(campground)
     if (!campground) {
         req.flash('error', 'Can not find that campground');
         return res.redirect('/campgrounds');
@@ -54,18 +50,23 @@ router.get('/:id', catchAsync(async (req, res,) => {
 }));
 
 // edit a campground
-router.get('/:id/edit', isLoggedIn, catchAsync(async (req, res) => {
-    const campground = await Campground.findById(req.params.id)
+router.get('/:id/edit', isLoggedIn, isAuthor, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const campground = await Campground.findById(id)
+    if (!campground) {
+        req.flash('error', 'Cannot find that campground!');
+        return res.redirect('/campgrounds');
+    }
     res.render('campgrounds/edit', { campground });
 }));
-router.put('/:id', validateCampground, catchAsync(async (req, res) => {
+router.put('/:id', isLoggedIn, validateCampground, catchAsync(async (req, res) => {
     // validation is realized in the middleware 'validateCampground'
     const { id } = req.params;
     // use method-override to fake update (put) from post; ... is to spread variables
     // 'campground' is a group, detailed in /campgrounds/new.ejs
-    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    const camp = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     req.flash('success', 'Successfully updated a new campground!');
-    res.redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${id}`)
 }));
 
 // delete a campground
