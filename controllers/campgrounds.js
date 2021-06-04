@@ -1,4 +1,5 @@
 const Campground = require('../models/campground');
+const { cloudinary } = require('../cloudinary');
 
 module.exports.index = async (req, res) => {
     const campgrounds = await Campground.find({});
@@ -13,9 +14,11 @@ module.exports.createCampground = async (req, res, next) => {
     // validation is realized in the middleware 'validateCampground'
     // create new model
     const campground = new Campground(req.body.campground);
+    campground.images = req.files.map(f => ({url: f.path, filename: f.filename}));
     campground.author = req.user._id;
     // save it
     await campground.save();
+    console.log(campground)
     req.flash('success', 'Successfully made a new campground!');
     // redirect to its particular camp page, also avoid user's resubmit
     res.redirect(`/campgrounds/${campground._id}`) 
@@ -54,7 +57,18 @@ module.exports.updateCampground = async (req, res) => {
     const { id } = req.params;
     // use method-override to fake update (put) from post; ... is to spread variables
     // 'campground' is a group, detailed in /campgrounds/new.ejs
-    const camp = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    // add more images the user upload (if any)
+    const imgs = req.files.map(f => ({url: f.path, filename: f.filename}));
+    campground.images.push(...imgs);
+    await campground.save()
+    // delete images the user want to choose to delete (if any)
+    if (req.body.deleteImages) {
+        for (let filename of req.body.deleteImages) {
+            await cloudinary.uploader.destroy(filename);
+        }
+        await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } })
+    }
     req.flash('success', 'Successfully updated a new campground!');
     res.redirect(`/campgrounds/${id}`)
 }
