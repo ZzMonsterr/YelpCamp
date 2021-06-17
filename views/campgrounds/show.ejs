@@ -10,7 +10,7 @@
                 <% campground.images.forEach((img, i) => { %> 
                 <div class="carousel-item <%= i === 0 ? 'active' : ''%>">
                     <!-- set only the first one to have 'active' in class -->
-                    <img class="d-block w-100" src="<%= img.url %>" alt="">
+                    <img src="<%= img.url %>" class="d-block w-100" alt="">
                 </div>
                 <% }) %> 
             </div>
@@ -28,7 +28,6 @@
 
         <!-- 1. Description part -->
         <div class="card mb-3">
-            <% } %>  -->
             <div class="card-body">
                 <h5><%= campground.title %></h5>
                 <p class="card-text"><%= campground.description %></p>
@@ -53,6 +52,8 @@
     </div>
 
     <div class="col-6">
+        <div id='map' style='width: 400px; height: 300px;'></div>
+
         <!-- 2. Create a Review Part -->
         <% if (currentUser) { %> 
         <h2>Leave a Review</h2>
@@ -106,3 +107,10 @@
     </div>
     
 </div>
+
+<script>
+    const mapToken = '<%- process.env.MAPBOX_TOKEN %>';
+    const campground = <%- JSON.stringify(campground) %>; // if not stringify, campground's _id will be complained by browser
+</script>
+
+<script src='/javascripts/showPageMap.js'></script>
