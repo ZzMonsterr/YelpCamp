@@ -136,14 +136,11 @@ app.use((req, res, next) => {
     if (!['/login', '/register', '/'].includes(req.originalUrl)) {
         req.session.returnTo = req.originalUrl;
         console.log(req.session.returnTo);
-    // }
-    } else {
-        req.session.returnTo = '/campgrounds';
     }
+    
     // otherwise, the user does come from login('/login') or homepage('/'),
     // redirect to localhost:3000/campgrounds as default per /routes/users.js
     res.locals.currentUser = req.user;
-    // console.log(res.locals.currentUser);
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();

@@ -3,9 +3,9 @@ const User = require('../models/user');
 module.exports.renderRegister = (req, res) => {
     // we've use viewengine and blabla in the app.js so that we can
     // avoid typing the whole path
-    if (req.isAuthenticated()) {
-        return res.redirect('/campgrounds');
-    }
+    // if (req.isAuthenticated()) {
+    //     return res.redirect('/campgrounds');
+    // }
     res.render('users/register');
 }
 
@@ -37,8 +37,8 @@ module.exports.renderLogin = (req, res) => {
 module.exports.login = (req, res) => {
     req.flash('success', 'welcome back!');
     const redirectUrl = req.session.returnTo || '/campgrounds';
-    console.log("in routes/users.js, redirectUrl:", redirectUrl);
-    // delete req.session.returnTo;
+    // console.log("in routes/users.js, redirectUrl:", redirectUrl);
+    delete req.session.returnTo;
     res.redirect(redirectUrl);
 }
 
