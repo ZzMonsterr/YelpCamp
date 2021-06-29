@@ -13,6 +13,8 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');   // https://helmetjs.github.io/
 const User = require('./models/user');
 
 const ExpressError = require('./utils/ExpressError');
@@ -49,13 +51,19 @@ app.use(methodOverride('_method'));
 // serving static assets in /public; 
 // use path.join here so that we can reach /public regardless of curr path
 app.use(express.static(path.join(__dirname, 'public')))
+// deal with illegal mongo request
+app.use(mongoSanitize({
+    replaceWith: '_'
+}))
 
 const sessionConfig = {             // in order to use express-session
+    name: 'session',
     secret: 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
+        // secure: true,    // only work via httpSecure
         // expires one week later
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7
@@ -63,6 +71,52 @@ const sessionConfig = {             // in order to use express-session
 }
 app.use(session(sessionConfig))     // in order to use connect-flash
 app.use(flash());
+app.use(helmet());
+
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://api.mapbox.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net",
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.mapbox.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+];
+const connectSrcUrls = [
+    "https://api.mapbox.com/",
+    "https://a.tiles.mapbox.com/",
+    "https://b.tiles.mapbox.com/",
+    "https://events.mapbox.com/",
+];
+const fontSrcUrls = [];
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com/dgn9e6s5a/", // dgn9e6s5a := MATCH YOUR CLOUDINARY ACCOUNT!
+                "https://images.unsplash.com/",
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());        // per http://www.passportjs.org/docs/downloads/html/: If your application uses persistent login sessions, passport.session() middleware must also be used.
 passport.use(new LocalStrategy(User.authenticate()));
