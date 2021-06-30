@@ -1,6 +1,7 @@
-if (process.env.NODE_ENV !== "production") {
-    require('dotenv').config();
-}
+// if (process.env.NODE_ENV !== "production") {
+//     require('dotenv').config();
+// }
+require('dotenv').config();
 
 // console.log(process.env.SECRET)
 console.log(process.env.API_KEY)
@@ -28,6 +29,8 @@ const userRoutes = require('./routes/users');
 const app = express();
 
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+// const dbUrl = 'mongodb://localhost:27017/yelp-camp';
+
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
@@ -59,6 +62,7 @@ app.use(mongoSanitize({
 }))
 
 const secret = process.env.SECRET || 'thisshouldbebettersecret!';
+
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     secret,
@@ -78,8 +82,7 @@ const sessionConfig = {             // in order to use express-session
     cookie: {
         httpOnly: true,
         // secure: true,    // only work via httpSecure
-        // expires one week later
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,  // expires one week later
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }
