@@ -4,10 +4,14 @@ const { places, descriptors } = require('./seedHelpers');
 const Campground = require('../models/campground');
 
 // use db.campgrounds.find() in `mongo` terminal
-mongoose.connect(process.env.DB_URL, {
+require('dotenv').config();
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
 });
 
 const db = mongoose.connection;
@@ -27,7 +31,7 @@ const seedDB = async () => {
         const random1000 = Math.floor(Math.random() * 1000);
         const price = Math.floor(Math.random() * 20) + 10
         const camp = new Campground({
-            author: '60b0e3a95d29fb0f7a3af027',  // tim._id
+            author: '60dc1366061a5e0015692829',  // yuanz._id
             location: `${cities[random1000].city}, ${cities[random1000].state}`,
             title: `${sample(descriptors)} ${sample(places)}`,
             // get a diff image everytime, ref https://source.unsplash.com/
