@@ -35,3 +35,10 @@ Final output website: https://cryptic-savannah-19861.herokuapp.com/
 2. open two terminals:
    - `cd` to this directory (YelpCamp), then `nodemon app.js` to connect to local MongoDB.
    - Run `mongo` in another terminal to see `yelp-camp` db.
+
+
+# git push issue
+Our own git repo will not update automatically after we push to Heroku side.
+So, in order to keep our own git repo also up to date,
+1. Push to Heroku: git push heroku main
+2. Push to own git repo: git push
